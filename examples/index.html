@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>videofxf - Example page</title>
+  </head>
+  <body>
+    <div
+      data-vfxf-video-id="y8jN8M9gjWY"
+      data-vfxf-start-at="1m 20s"
+      style="width: 300px;">
+      <div data-vfxf-wrapper></div>
+      <div>
+        <a href="#" data-vfxf-next>Next Frame</a>
+        <div>
+          <span data-vfxf-current-step></span>
+          /
+          <span data-vfxf-steps></span>
+        </div>
+        <a href="#" data-vfxf-prev>Prev Frame</a>
+      </div>
+    </div>
+
+    <script src="../build/videofxf.js"></script>
+    <script>
+      
+      (function(){
+        var players = document.querySelectorAll("[data-vfxf-video-id]");
+        [].forEach.call(players, function(player){
+          new videofxf(player);
+        });
+      })();
+
+    </script>
+  </body>
+</html>
