@@ -55,6 +55,39 @@ module.exports = APILoader;
 },{}],2:[function(require,module,exports){
 var extend = require("../utils/extend.js");
 
+var Steps = function(options){
+  options = extend({}, this._defaults, options);
+  this.index = options.startAt;
+  this.steps = options.steps;
+};
+
+extend(Steps.prototype, {
+  _defaults:{
+    steps: 10,
+    startAt: 0
+  },
+  next: function(){
+    var nextIndex = this.index + 1;
+    if(nextIndex < this.steps){
+      this.index = nextIndex;
+      return true;
+    }
+    return false;
+  },
+  prev: function(){
+    var prevIndex = this.index - 1;
+    if(prevIndex >= 0){
+      this.index = prevIndex;
+      return true;
+    }
+    return false;
+  }
+})
+
+module.exports = Steps;
+},{"../utils/extend.js":6}],3:[function(require,module,exports){
+var extend = require("../utils/extend.js");
+
 var Video = function(attributes){
   this.attributes = extend({}, this._defaults, attributes);
 }
@@ -66,7 +99,7 @@ extend(Video.prototype, {
     height: 390,
     width: 640,
 
-    wrapperClass: "vfxf-video__wrapper"
+    time: "0s"
   },
   get: function(key){
     return this.attributes[key];
@@ -77,11 +110,63 @@ extend(Video.prototype, {
     }else{
       extend(this.attributes, key);
     }
+  },
+  getTime: function(){
+    return this.toTime(this.get("time"));
+  },
+  toTime: function(string){
+    var match = string.match(/(\d+m){0,1}\s*(\d+s){0,1}/),
+        time = 0;
+    if(match[1]){
+      time += parseInt(match[1],10)*60;
+    }
+    if(match[2]){
+      time += parseInt(match[2],10);
+    }
+    return time;
   }
 });
 
 module.exports = Video;
-},{"../utils/extend.js":4}],3:[function(require,module,exports){
+},{"../utils/extend.js":6}],4:[function(require,module,exports){
+var extend = require("../utils/extend.js");
+
+var Controls = function(){
+
+}
+
+extend(Controls.prototype,{
+  initialize: function(element, model){
+    var next = element.querySelectorAll("[data-vfxf-next]")[0];
+    if(next){
+      next
+        .addEventListener("click", this.onNext.bind(this), false)
+    }
+
+    var prev = element.querySelectorAll("[data-vfxf-prev]")[0];
+    if(prev){
+      prev
+        .addEventListener("click", this.onPrev.bind(this), false)
+    }
+  },
+  onNext: function(e){
+    e.preventDefault();
+    var event = document.createEvent('Event');
+    event.initEvent('getNextFrame', true, true);
+
+    e.currentTarget.dispatchEvent(event);
+  },
+  onPrev: function(e){
+    e.preventDefault();
+    var event = document.createEvent('Event');
+    event.initEvent('getPrevFrame', true, true);
+
+    e.currentTarget.dispatchEvent(event);
+  }
+});
+
+module.exports = Controls;
+},{"../utils/extend.js":6}],5:[function(require,module,exports){
 var extend = require("../utils/extend.js");
 
 var Viewport = function(){
@@ -96,11 +181,26 @@ extend(Viewport.prototype,{
   getView: function(type){
     var viewClass = require("/src/scripts/ui/views/"+type+"_view.js");
     return new viewClass();
+  },
+  seek: function(time){
+    this.view.seek(time);
+  },
+  play: function(){
+    this.view.play();
+  },
+  pause: function(){
+    this.view.pause();
+  },
+  nextFrame: function(){
+    this.view.nextFrame();
+  },
+  prevFrame: function(){
+    this.view.prevFrame();
   }
 });
 
 module.exports = Viewport;
-},{"../utils/extend.js":4}],4:[function(require,module,exports){
+},{"../utils/extend.js":6}],6:[function(require,module,exports){
 module.exports = function(){
   var args = Array.prototype.slice.call(arguments),
       target = args.shift();
@@ -112,18 +212,22 @@ module.exports = function(){
   })
   return target;
 }
-},{}],5:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 window.videofxf = (function(){
   
   var extend = require("./utils/extend.js"),
       APILoader = require("./core/api_loader.js"),
       Viewport = require("./ui/viewport.js"),
-      Video = require("./models/video.js");
+      Video = require("./models/video.js"),
+      Controls = require("./ui/controls.js"),
+      Steps = require("./models/steps.js");
 
   var videofxf = function(element, options){
     this.element = element;
     this.model = this.getModel(element, options);
     this.viewport = new Viewport();
+    this.controls = new Controls();
+    this.steps = new Steps();
     this.initialize();
   };
 
@@ -137,25 +241,46 @@ window.videofxf = (function(){
       }
     },
     onAPILoaded: function(){
+      this.element
+        .addEventListener("playerReady", this.onPlayerReady.bind(this), false);
+      this.element
+        .addEventListener("getNextFrame", this.onGetNextFrame.bind(this), false)
+      this.element
+        .addEventListener("getPrevFrame", this.onGetPrevFrame.bind(this), false);
       this.render();
     },
     render: function(){
       this.viewport.draw(this.element, this.model);
+      this.controls.initialize(this.element, this.model);
     },
     getModel: function(element, options){
       var attributes = {},
           video;
 
       attributes.videoId = element.getAttribute("data-vfxf-video-id");
+      attributes.time = element.getAttribute("data-vfxf-start-at");
 
       return new Video(extend(attributes, options));
+    },
+    onPlayerReady: function(e){
+      this.viewport.seek(this.model.getTime());
+    },
+    onGetNextFrame: function(){
+      if(this.steps.next()){
+        this.viewport.nextFrame();
+      }
+    },
+    onGetPrevFrame: function(){
+      if(this.steps.prev()){
+        this.viewport.prevFrame();
+      }
     }
   });
 
   return videofxf;
 
 })();
-},{"./core/api_loader.js":1,"./models/video.js":2,"./ui/viewport.js":3,"./utils/extend.js":4}],"/src/scripts/ui/views/view_base.js":[function(require,module,exports){
+},{"./core/api_loader.js":1,"./models/steps.js":2,"./models/video.js":3,"./ui/controls.js":4,"./ui/viewport.js":5,"./utils/extend.js":6}],"/src/scripts/ui/views/view_base.js":[function(require,module,exports){
 var extend = require("../../utils/extend.js");
 
 var ViewBase = function(){
@@ -167,7 +292,16 @@ extend(ViewBase.prototype,{
     this.buildUI(element, model);
   },
   buildUI: function(element, model){
-    console.log("ppp")
+  },
+  seek: function(time){
+  },
+  play: function(){
+  },
+  pause: function(){
+  },
+  nextFrame: function(){
+  },
+  prevFrame: function(){
   }
 });
 
@@ -180,7 +314,7 @@ ViewBase.extend = function(target, proto){
 };
 
 module.exports = ViewBase;
-},{"../../utils/extend.js":4}],"/src/scripts/ui/views/youtube_view.js":[function(require,module,exports){
+},{"../../utils/extend.js":6}],"/src/scripts/ui/views/youtube_view.js":[function(require,module,exports){
 var ViewBase = require("/src/scripts/ui/views/view_base.js");
 
 var YoutubeView = function(){
@@ -189,29 +323,66 @@ var YoutubeView = function(){
 
 ViewBase.extend(YoutubeView, {
   buildUI: function(element, model){
-    var wrapper = document.createElement("div");
-    wrapper.className = model.get("wrapperClass");
-    element.appendChild(wrapper);
-
+    var wrapper = element.querySelectorAll("[data-vfxf-wrapper]")[0];
+    
     var video = document.createElement("div");
     wrapper.appendChild( video )
 
-    this.player = this.embedPlayer(video)    
+    this.player = this.embedPlayer(video, model)    
   },
-  embedPlayer: function(target){
+  embedPlayer: function(target, model){
     return new YT.Player(target, {
       height: model.get("height"),
       width: model.get("width"),
       videoId: model.get("videoId"),
       events:{
-        onReady: this.onPlayerReady.bind(this)
+        onReady: this.onPlayerReady.bind(this),
+        onStateChange: this.onPlayerStateChange.bind(this)
+      },
+      playerVars: {
+        autohide: 1,
+        autoplay: 0,
+        start: model.getTime(),
+        controls: 0
       }
     });
   },
   onPlayerReady: function(){
+    var iframe = this.player.getIframe(),
+        event = document.createEvent('Event');
+    event.initEvent('playerReady', true, true);
+
     
+    this.player.setPlaybackRate(1);
+    iframe.dispatchEvent(event);
+  },
+  onPlayerStateChange: function(e){
+    if(e.data == 1)
+      this.pause();
+  },
+  seek: function(time){
+    if(!this.player)
+      return;
+
+    this.player.seekTo(time);
+  },
+  play: function(){
+    this.player.playVideo();
+  },
+  pause: function(){
+    this.player.pauseVideo();
+  },
+  nextFrame: function(){
+    this.changeFrame(1);
+  },
+  prevFrame: function(){
+    this.changeFrame(-1);
+  },
+  changeFrame: function(frames){
+    var time = this.player.getCurrentTime() + (frames/25);
+    this.player.seekTo(time);
   }
 });
 
 module.exports = YoutubeView;
-},{"/src/scripts/ui/views/view_base.js":"/src/scripts/ui/views/view_base.js"}]},{},[5]);
+},{"/src/scripts/ui/views/view_base.js":"/src/scripts/ui/views/view_base.js"}]},{},[7]);

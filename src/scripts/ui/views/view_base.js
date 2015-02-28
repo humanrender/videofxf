@@ -9,7 +9,16 @@ extend(ViewBase.prototype,{
     this.buildUI(element, model);
   },
   buildUI: function(element, model){
-    console.log("ppp")
+  },
+  seek: function(time){
+  },
+  play: function(){
+  },
+  pause: function(){
+  },
+  nextFrame: function(){
+  },
+  prevFrame: function(){
   }
 });
 

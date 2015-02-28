@@ -12,6 +12,21 @@ extend(Viewport.prototype,{
   getView: function(type){
     var viewClass = require("/src/scripts/ui/views/"+type+"_view.js");
     return new viewClass();
+  },
+  seek: function(time){
+    this.view.seek(time);
+  },
+  play: function(){
+    this.view.play();
+  },
+  pause: function(){
+    this.view.pause();
+  },
+  nextFrame: function(){
+    this.view.nextFrame();
+  },
+  prevFrame: function(){
+    this.view.prevFrame();
   }
 });
 
