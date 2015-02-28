@@ -5,6 +5,7 @@ window.videofxf = (function(){
       Viewport = require("./ui/viewport.js"),
       Video = require("./models/video.js"),
       Controls = require("./ui/controls.js"),
+      Labels = require("./ui/labels.js"),
       Steps = require("./models/steps.js");
 
   var videofxf = function(element, options){
@@ -13,6 +14,7 @@ window.videofxf = (function(){
     this.viewport = new Viewport();
     this.controls = new Controls();
     this.steps = new Steps();
+    this.labels = new Labels();
     this.initialize();
   };
 
@@ -37,6 +39,10 @@ window.videofxf = (function(){
     render: function(){
       this.viewport.draw(this.element, this.model);
       this.controls.initialize(this.element, this.model);
+      this.labels.initialize(this.element);
+      this.labels
+        .setSteps(this.steps.total);
+      this.updateLabels();
     },
     getModel: function(element, options){
       var attributes = {},
@@ -53,12 +59,17 @@ window.videofxf = (function(){
     onGetNextFrame: function(){
       if(this.steps.next()){
         this.viewport.nextFrame();
+        this.updateLabels();
       }
     },
     onGetPrevFrame: function(){
       if(this.steps.prev()){
         this.viewport.prevFrame();
+        this.updateLabels();
       }
+    },
+    updateLabels: function(){
+      this.labels.setCurrentStep(this.steps.currentStep+1);
     }
   });
 

@@ -26,7 +26,8 @@ ViewBase.extend(YoutubeView, {
         autohide: 1,
         autoplay: 0,
         start: model.getTime(),
-        controls: 0
+        controls: 0,
+        disablekb: 1
       }
     });
   },
@@ -35,7 +36,7 @@ ViewBase.extend(YoutubeView, {
         event = document.createEvent('Event');
     event.initEvent('playerReady', true, true);
 
-    
+    this.player.setVolume(0);
     this.player.setPlaybackRate(1);
     iframe.dispatchEvent(event);
   },

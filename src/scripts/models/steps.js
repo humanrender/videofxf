@@ -2,27 +2,27 @@ var extend = require("../utils/extend.js");
 
 var Steps = function(options){
   options = extend({}, this._defaults, options);
-  this.index = options.startAt;
-  this.steps = options.steps;
+  this.currentStep = options.startAt;
+  this.total = options.total;
 };
 
 extend(Steps.prototype, {
   _defaults:{
-    steps: 10,
+    total: 10,
     startAt: 0
   },
   next: function(){
-    var nextIndex = this.index + 1;
-    if(nextIndex < this.steps){
-      this.index = nextIndex;
+    var nextIndex = this.currentStep + 1;
+    if(nextIndex < this.total){
+      this.currentStep = nextIndex;
       return true;
     }
     return false;
   },
   prev: function(){
-    var prevIndex = this.index - 1;
+    var prevIndex = this.currentStep - 1;
     if(prevIndex >= 0){
-      this.index = prevIndex;
+      this.currentStep = prevIndex;
       return true;
     }
     return false;

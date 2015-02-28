@@ -57,27 +57,27 @@ var extend = require("../utils/extend.js");
 
 var Steps = function(options){
   options = extend({}, this._defaults, options);
-  this.index = options.startAt;
-  this.steps = options.steps;
+  this.currentStep = options.startAt;
+  this.total = options.total;
 };
 
 extend(Steps.prototype, {
   _defaults:{
-    steps: 10,
+    total: 10,
     startAt: 0
   },
   next: function(){
-    var nextIndex = this.index + 1;
-    if(nextIndex < this.steps){
-      this.index = nextIndex;
+    var nextIndex = this.currentStep + 1;
+    if(nextIndex < this.total){
+      this.currentStep = nextIndex;
       return true;
     }
     return false;
   },
   prev: function(){
-    var prevIndex = this.index - 1;
+    var prevIndex = this.currentStep - 1;
     if(prevIndex >= 0){
-      this.index = prevIndex;
+      this.currentStep = prevIndex;
       return true;
     }
     return false;
@@ -85,7 +85,7 @@ extend(Steps.prototype, {
 })
 
 module.exports = Steps;
-},{"../utils/extend.js":6}],3:[function(require,module,exports){
+},{"../utils/extend.js":7}],3:[function(require,module,exports){
 var extend = require("../utils/extend.js");
 
 var Video = function(attributes){
@@ -128,7 +128,7 @@ extend(Video.prototype, {
 });
 
 module.exports = Video;
-},{"../utils/extend.js":6}],4:[function(require,module,exports){
+},{"../utils/extend.js":7}],4:[function(require,module,exports){
 var extend = require("../utils/extend.js");
 
 var Controls = function(){
@@ -166,7 +166,31 @@ extend(Controls.prototype,{
 });
 
 module.exports = Controls;
-},{"../utils/extend.js":6}],5:[function(require,module,exports){
+},{"../utils/extend.js":7}],5:[function(require,module,exports){
+var extend = require("../utils/extend.js");
+
+var Labels = function(){
+};
+
+extend(Labels.prototype, {
+  initialize: function(element){
+    this.steps = element.querySelectorAll("[data-vfxf-steps]")[0];
+    this.currentStep = element.querySelectorAll("[data-vfxf-current-step]")[0];
+  },
+  setSteps: function(steps){
+    if(this.steps){
+      this.steps.innerHTML = steps;
+    }
+  },
+  setCurrentStep: function(currentStep){
+    if(this.currentStep){
+      this.currentStep.innerHTML = currentStep;
+    }
+  }
+});
+
+module.exports = Labels;
+},{"../utils/extend.js":7}],6:[function(require,module,exports){
 var extend = require("../utils/extend.js");
 
 var Viewport = function(){
@@ -200,7 +224,7 @@ extend(Viewport.prototype,{
 });
 
 module.exports = Viewport;
-},{"../utils/extend.js":6}],6:[function(require,module,exports){
+},{"../utils/extend.js":7}],7:[function(require,module,exports){
 module.exports = function(){
   var args = Array.prototype.slice.call(arguments),
       target = args.shift();
@@ -212,7 +236,7 @@ module.exports = function(){
   })
   return target;
 }
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 window.videofxf = (function(){
   
   var extend = require("./utils/extend.js"),
@@ -220,6 +244,7 @@ window.videofxf = (function(){
       Viewport = require("./ui/viewport.js"),
       Video = require("./models/video.js"),
       Controls = require("./ui/controls.js"),
+      Labels = require("./ui/labels.js"),
       Steps = require("./models/steps.js");
 
   var videofxf = function(element, options){
@@ -228,6 +253,7 @@ window.videofxf = (function(){
     this.viewport = new Viewport();
     this.controls = new Controls();
     this.steps = new Steps();
+    this.labels = new Labels();
     this.initialize();
   };
 
@@ -252,6 +278,10 @@ window.videofxf = (function(){
     render: function(){
       this.viewport.draw(this.element, this.model);
       this.controls.initialize(this.element, this.model);
+      this.labels.initialize(this.element);
+      this.labels
+        .setSteps(this.steps.total);
+      this.updateLabels();
     },
     getModel: function(element, options){
       var attributes = {},
@@ -268,19 +298,24 @@ window.videofxf = (function(){
     onGetNextFrame: function(){
       if(this.steps.next()){
         this.viewport.nextFrame();
+        this.updateLabels();
       }
     },
     onGetPrevFrame: function(){
       if(this.steps.prev()){
         this.viewport.prevFrame();
+        this.updateLabels();
       }
+    },
+    updateLabels: function(){
+      this.labels.setCurrentStep(this.steps.currentStep+1);
     }
   });
 
   return videofxf;
 
 })();
-},{"./core/api_loader.js":1,"./models/steps.js":2,"./models/video.js":3,"./ui/controls.js":4,"./ui/viewport.js":5,"./utils/extend.js":6}],"/src/scripts/ui/views/view_base.js":[function(require,module,exports){
+},{"./core/api_loader.js":1,"./models/steps.js":2,"./models/video.js":3,"./ui/controls.js":4,"./ui/labels.js":5,"./ui/viewport.js":6,"./utils/extend.js":7}],"/src/scripts/ui/views/view_base.js":[function(require,module,exports){
 var extend = require("../../utils/extend.js");
 
 var ViewBase = function(){
@@ -314,7 +349,7 @@ ViewBase.extend = function(target, proto){
 };
 
 module.exports = ViewBase;
-},{"../../utils/extend.js":6}],"/src/scripts/ui/views/youtube_view.js":[function(require,module,exports){
+},{"../../utils/extend.js":7}],"/src/scripts/ui/views/youtube_view.js":[function(require,module,exports){
 var ViewBase = require("/src/scripts/ui/views/view_base.js");
 
 var YoutubeView = function(){
@@ -343,7 +378,8 @@ ViewBase.extend(YoutubeView, {
         autohide: 1,
         autoplay: 0,
         start: model.getTime(),
-        controls: 0
+        controls: 0,
+        disablekb: 1
       }
     });
   },
@@ -352,7 +388,7 @@ ViewBase.extend(YoutubeView, {
         event = document.createEvent('Event');
     event.initEvent('playerReady', true, true);
 
-    
+    this.player.setVolume(0);
     this.player.setPlaybackRate(1);
     iframe.dispatchEvent(event);
   },
@@ -385,4 +421,4 @@ ViewBase.extend(YoutubeView, {
 });
 
 module.exports = YoutubeView;
-},{"/src/scripts/ui/views/view_base.js":"/src/scripts/ui/views/view_base.js"}]},{},[7]);
+},{"/src/scripts/ui/views/view_base.js":"/src/scripts/ui/views/view_base.js"}]},{},[8]);
