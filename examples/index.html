@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>videofxf - Example page</title>
+  </head>
+  <body>
+    <div
+      data-vfxf-video-id="y8jN8M9gjWY"
+      style="width: 300px;"></div>
+
+    <script src="../build/videofxf.js"></script>
+    <script>
+      
+      (function(){
+        var players = document.querySelectorAll("[data-vfxf-video-id]");
+        [].forEach.call(players, function(player){
+          new videofxf(player);
+        });
+      })();
+
+    </script>
+  </body>
+</html>
