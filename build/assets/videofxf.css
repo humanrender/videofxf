@@ -1,0 +1,62 @@
+.videofxf{
+  font-family: Helvetica, Arial, sans-serif;
+}
+
+.videofxf [data-vfxf-wrapper]{
+  height: 0;
+  display: block;
+  padding-bottom: 60.9375%;
+  position: relative;
+}
+
+.videofxf [data-vfxf-wrapper] iframe{
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+.videofxf [data-vfxf-controls]{
+  display: table;
+  white-space: nowrap;
+  width: 100%;
+  text-align: center;
+  margin-top: 10px;
+}
+
+.videofxf [data-vfxf-controls] > *{
+  display: table-cell;
+  vertical-align: middle;
+}
+
+.videofxf [data-vfxf-labels]{
+  font-size: 1.5em;  
+  width: 100%;
+  
+}
+
+.videofxf [data-vfxf-next],
+.videofxf [data-vfxf-prev]{
+  color: black;
+  text-decoration: none;
+}
+
+.videofxf [data-vfxf-next] span,
+.videofxf [data-vfxf-prev] span{
+  display: block;
+  font-size: 1em;
+  
+  background-repeat: no-repeat;
+  
+}
+
+.videofxf [data-vfxf-next] span{
+  background-image: url("videofxf-forward.svg");
+  background-position: right 9px;
+  padding: 10px 26px 10px 10px;
+}
+
+.videofxf [data-vfxf-prev] span{
+  background-image: url("videofxf-back.svg");
+  background-position: left 9px;
+  padding: 10px 10px 10px 26px;
+}
