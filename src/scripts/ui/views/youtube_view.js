@@ -1,10 +1,11 @@
-var ViewBase = require("/src/scripts/ui/views/view_base.js");
-
-var YoutubeView = function(){
-  YoutubeView._super.call(this);
-}
+var trigger = require("../../utils/trigger.js"),
+    ViewBase = require("/src/scripts/ui/views/view_base.js"),
+    YoutubeView = function(){
+      YoutubeView._super.call(this);
+    }
 
 ViewBase.extend(YoutubeView, {
+  ready: false,
   buildUI: function(element, model){
     var wrapper = element.querySelectorAll("[data-vfxf-wrapper]")[0];
     
@@ -24,7 +25,7 @@ ViewBase.extend(YoutubeView, {
       },
       playerVars: {
         autohide: 1,
-        autoplay: 0,
+        autoplay: 1,
         start: model.getTime(),
         controls: 0,
         disablekb: 1
@@ -32,17 +33,20 @@ ViewBase.extend(YoutubeView, {
     });
   },
   onPlayerReady: function(){
-    var iframe = this.player.getIframe(),
-        event = document.createEvent('Event');
-    event.initEvent('playerReady', true, true);
-
     this.player.setVolume(0);
     this.player.setPlaybackRate(1);
-    iframe.dispatchEvent(event);
   },
   onPlayerStateChange: function(e){
-    if(e.data == 1)
-      this.pause();
+    if(e.data == 1){
+      if(this.ready){
+        var nextFrameEvent = trigger(this.player.getIframe(), "nextFrame");
+        if(!e.defaultPrevented) this.pause();
+      }else{
+        this.pause();
+        this.ready = true;
+        trigger(this.player.getIframe(), "playerReady");
+      }
+    }
   },
   seek: function(time){
     if(!this.player)

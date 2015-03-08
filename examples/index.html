@@ -3,21 +3,24 @@
   <head>
     <meta charset="UTF-8">
     <title>videofxf - Example page</title>
+    <link rel="stylesheet" href="../build/assets/videofxf.css">
   </head>
   <body>
     <div
       data-vfxf-video-id="y8jN8M9gjWY"
       data-vfxf-start-at="1m 20s"
-      style="width: 300px;">
+      class="videofxf"
+      style="max-width: 640px; margin: 0 auto;">
       <div data-vfxf-wrapper></div>
-      <div>
-        <a href="#" data-vfxf-next>Next Frame</a>
-        <div>
+      <div data-vfxf-controls>
+        <a href="#" data-vfxf-prev><span>Prev Frame</span></a>
+        <div data-vfxf-labels>
           <span data-vfxf-current-step></span>
           /
           <span data-vfxf-steps></span>
         </div>
-        <a href="#" data-vfxf-prev>Prev Frame</a>
+        <a href="#" data-vfxf-next><span>Next Frame</span></a>
+        
       </div>
     </div>
 

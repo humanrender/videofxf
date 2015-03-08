@@ -15,6 +15,11 @@ window.videofxf = (function(){
     this.controls = new Controls();
     this.steps = new Steps();
     this.labels = new Labels();
+
+    this.focused = false;
+    this.onKeyDown = this.onKeyDown.bind(this);
+    this.onBodyMouseDown = this.onBodyMouseDown.bind(this);
+
     this.initialize();
   };
 
@@ -29,11 +34,13 @@ window.videofxf = (function(){
     },
     onAPILoaded: function(){
       this.element
-        .addEventListener("playerReady", this.onPlayerReady.bind(this), false);
-      this.element
         .addEventListener("getNextFrame", this.onGetNextFrame.bind(this), false)
       this.element
         .addEventListener("getPrevFrame", this.onGetPrevFrame.bind(this), false);
+      this.element
+        .addEventListener("nextFrame", this.onNextFrame.bind(this), false);
+      this.element
+        .addEventListener("mousedown", this.onMouseDown.bind(this), false);
       this.render();
     },
     render: function(){
@@ -53,20 +60,61 @@ window.videofxf = (function(){
 
       return new Video(extend(attributes, options));
     },
-    onPlayerReady: function(e){
-      this.viewport.seek(this.model.getTime());
-    },
-    onGetNextFrame: function(){
+    next: function(){
       if(this.steps.next()){
         this.viewport.nextFrame();
         this.updateLabels();
       }
     },
-    onGetPrevFrame: function(){
+    prev: function(){
       if(this.steps.prev()){
         this.viewport.prevFrame();
         this.updateLabels();
       }
+    },
+    onGetNextFrame: function(){
+      this.next();
+    },
+    onGetPrevFrame: function(){
+      this.prev();
+    },
+    onNextFrame: function(e){
+      e.preventDefault();
+      this.steps.next()
+      this.viewport.seek(this.model.getTime() + (this.steps.currentStep/25));
+
+      this.updateLabels();
+    },
+    onMouseDown: function(e){
+      e.stopPropagation();
+      this.focus();
+    },
+    onKeyDown: function(e){
+      switch(e.keyCode){
+        case 39: //Right
+          this.next();
+          break;
+        case 37: //Left
+          this.prev();
+          break;
+      }
+    },
+    focus: function(){
+      document.body
+        .addEventListener("keydown", this.onKeyDown, false);
+      document.body
+        .addEventListener("mousedown", this.onBodyMouseDown);
+      this.focused = true;
+    },
+    blur: function(){
+      document.body
+        .removeEventListener("keydown", this.onKeyDown);
+      document.body
+        .removeEventListener("mousedown", this.onBodyMouseDown);
+      this.focused = false;
+    },
+    onBodyMouseDown: function(){
+      this.blur();
     },
     updateLabels: function(){
       this.labels.setCurrentStep(this.steps.currentStep+1);
