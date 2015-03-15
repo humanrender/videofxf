@@ -260,7 +260,7 @@ window.videofxf = (function(){
     this.model = this.getModel(element, options);
     this.viewport = new Viewport();
     this.controls = new Controls();
-    this.steps = new Steps();
+    this.steps = this.getSteps(element);
     this.labels = new Labels();
 
     this.focused = false;
@@ -306,6 +306,13 @@ window.videofxf = (function(){
       attributes.time = element.getAttribute("data-vfxf-start-at");
 
       return new Video(extend(attributes, options));
+    },
+    getSteps: function(element){
+      var steps = parseInt(element.getAttribute("data-vfxf-frames"), 10);
+      if(isNaN(steps)) steps = 0;
+      return new Steps({
+        total: steps
+      })
     },
     next: function(){
       if(this.steps.next()){

@@ -31,32 +31,38 @@
 .videofxf [data-vfxf-labels]{
   font-size: 1.5em;  
   width: 100%;
-  
 }
+
+.videofxf [data-vfxf-labels] > *{
+  display: inline;  
+}
+
 
 .videofxf [data-vfxf-next],
 .videofxf [data-vfxf-prev]{
   color: black;
   text-decoration: none;
+  outline: none;
 }
 
-.videofxf [data-vfxf-next] span,
-.videofxf [data-vfxf-prev] span{
+.videofxf [data-vfxf-next] > *,
+.videofxf [data-vfxf-prev] > *{
   display: block;
+  border: none;
   font-size: 1em;
   
   background-repeat: no-repeat;
   
 }
 
-.videofxf [data-vfxf-next] span{
+.videofxf [data-vfxf-next] > *{
   background-image: url("videofxf-forward.svg");
-  background-position: right 9px;
+  background-position: right center;
   padding: 10px 26px 10px 10px;
 }
 
-.videofxf [data-vfxf-prev] span{
+.videofxf [data-vfxf-prev] > *{
   background-image: url("videofxf-back.svg");
-  background-position: left 9px;
+  background-position: left center;
   padding: 10px 10px 10px 26px;
 }
